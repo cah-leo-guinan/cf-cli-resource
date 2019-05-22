@@ -11,7 +11,7 @@ resources:
       username: ((artifacts.username))
       password: ((artifacts.password))
       repository: artifacts.cahcommtech.com/cf-cli-docker
-      tag: latest
+      tag: 0.1
 
 
 jobs:
