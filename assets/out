@@ -25,7 +25,9 @@ payload=$(mktemp "$TMPDIR/cf-cli-resource-request.XXXXXX")
 cat > $payload <&0
 
 debug=$(jq -r '.source.debug //empty' < $payload)
-set -x
+if [ "$debug" = "true" ]; then
+  set -x
+fi
 
 api=$(jq -r '.source.api //empty' < $payload)
 skip_cert_check=$(jq -r '.source.skip_cert_check //false' < $payload)
@@ -37,7 +39,7 @@ client_secret=$(jq -r '.source.client_secret //empty' < $payload)
 source_org=$(jq -r '.source.org //empty' < $payload)
 source_space=$(jq -r '.source.space //empty' < $payload)
 params=$(jq -r '.params //empty' < $payload)
-docker_password=$(jq -r '.source.docker_password //empty' < $payload)
+docker_password=$(echo "$params" | jq -r '.docker_password //empty') && export CF_DOCKER_PASSWORD=$docker_password
 
 cf_color=$(jq -r '.source.cf_color //empty' < $payload) && [ -n "$cf_color" ] && export CF_COLOR=$cf_color
 cf_dial_timeout=$(jq -r '.source.cf_dial_timeout //empty' < $payload) && [ -n "$cf_dial_timeout" ] && export CF_DIAL_TIMEOUT=$cf_dial_timeout
@@ -362,7 +364,7 @@ echo "$params" | jq -c '.commands[]' | while read -r options; do
 
     if [ -n "$current_app_name" ]; then
       # autopilot (tested v0.0.2 - v0.0.6) doesn't like CF_TRACE=true
-      CF_DOCKER_PASSWORD=$docker_password CF_TRACE=false cf zero-downtime-push "$current_app_name" "${args[@]}"
+      CF_TRACE=false cf zero-downtime-push "$current_app_name" "${args[@]}"
     else
       cf push "${args[@]}"
     fi
